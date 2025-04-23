@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <!-- Vùng hiển thị video/thumbnail -->
+    <ImageView
+        android:id="@+id/imageViewThumbnail"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:scaleType="centerCrop"
+        android:background="#CCCCCC"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:srcCompat="@tools:sample/backgrounds/scenic"
+        android:contentDescription="Video Thumbnail" />
+
+    <!-- Thông tin người đăng -->
+    <ImageView
+        android:id="@+id/imageViewUploaderAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageViewThumbnail"
+        tools:srcCompat="@tools:sample/avatars"
+        android:contentDescription="Uploader Avatar" />
+
+    <TextView
+        android:id="@+id/textViewUploaderEmail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textStyle="bold"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintStart_toEndOf="@id/imageViewUploaderAvatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/imageViewUploaderAvatar"
+        app:layout_constraintBottom_toBottomOf="@id/imageViewUploaderAvatar"
+        tools:text="uploader@example.com" />
+
+    <!-- Tiêu đề Video -->
+    <TextView
+        android:id="@+id/textViewVideoTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:maxLines="2"
+        android:ellipsize="end"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageViewUploaderAvatar"
+        tools:text="This is a Sample Video Title That Might Be Quite Long" />
+
+    <!-- Nút Like/Dislike -->
+    <ImageButton
+        android:id="@+id/buttonLike"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_like_outline"  app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textViewVideoTitle"
+        android:contentDescription="Like button" />
+
+    <TextView
+        android:id="@+id/textViewLikesCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        tools:text="123"
+        app:layout_constraintStart_toEndOf="@id/buttonLike"
+        app:layout_constraintTop_toTopOf="@id/buttonLike"
+        app:layout_constraintBottom_toBottomOf="@id/buttonLike" />
+
+    <ImageButton
+        android:id="@+id/buttonDislike"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_dislike_outline"
+        app:layout_constraintStart_toEndOf="@id/textViewLikesCount"
+        app:layout_constraintTop_toTopOf="@id/buttonLike"
+        android:contentDescription="Dislike button" />
+
+    <TextView
+        android:id="@+id/textViewDislikesCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        tools:text="45"
+        app:layout_constraintStart_toEndOf="@id/buttonDislike"
+        app:layout_constraintTop_toTopOf="@id/buttonDislike"
+        app:layout_constraintBottom_toBottomOf="@id/buttonDislike" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

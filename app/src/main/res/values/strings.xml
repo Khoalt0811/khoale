@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">JavaVideoApp</string>
+    <!-- Thêm các chuỗi khác bạn dùng trong layout hoặc code -->
+    <string name="email">Email</string>
+    <string name="password">Password (min 6 chars)</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="feed">Feed</string>
+    <string name="upload">Upload</string>
+    <string name="profile">Profile</string>
+    <string name="logout">Logout</string>
+    <string name="select_video">Select Video</string>
+    <string name="change_video">Change Video</string>
+    <string name="video_title">Video Title</string>
+    <string name="video_description_optional">Video Description (Optional)</string>
+    <string name="upload_video">Upload Video</string>
+    <string name="like_button">Like button</string>
+    <string name="dislike_button">Dislike button</string>
+    <string name="video_thumbnail">Video Thumbnail</string>
+    <string name="uploader_avatar">Uploader Avatar</string>
+    <string name="unknown_uploader">Unknown Uploader</string>
+    <string name="no_title">No Title</string>
+    <string name="n_a">N/A</string>
+    <string name="no_name_set">No Name Set</string>
+    <string name="profile_avatar">Profile Avatar</string>
+    <string name="enter_a_valid_email">Enter a valid email</string>
+    <string name="password_length_error">Password must be at least 6 characters</string>
+    <string name="please_select_video">Please select a video first</string>
+    <string name="title_cannot_be_empty">Title cannot be empty</string>
+    <string name="authentication_successful">Authentication Successful!</string>
+    <string name="signup_confirm_email">Signup successful! Please check your email to confirm.</string>
+    <string name="signup_response_unclear">Signup response is unclear.</string>
+    <string name="user_not_authenticated">User not authenticated</string>
+    <string name="user_id_not_found">User ID not found</string>
+    <string name="could_not_get_file">Could not get file from Uri</string>
+    <string name="upload_error">Upload Error: %s</string> <!-- %s sẽ được thay bằng thông báo lỗi -->
+    <string name="upload_successful">Upload successful!</string>
+    <string name="network_error">Network error: %s</string>
+    <string name="failed_to_fetch_videos">Failed to fetch videos: %d</string> <!-- %d là response code -->
+    <string name="error_loading_profile">Error loading profile: %s</string>
+    <string name="no_videos_found">Không tìm thấy video nào.\nKéo xuống để làm mới.</string>
+
+</resources>
