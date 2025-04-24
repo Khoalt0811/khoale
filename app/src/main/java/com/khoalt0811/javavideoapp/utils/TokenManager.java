@@ -1,79 +1,69 @@
-package com.khoalt0811.javavideoapp.utils; // Thay package name nếu khác
+package com.khoalt0811.javavideoapp.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 public class TokenManager {
-
-    private static final String TAG = "TokenManager";
-    private static final String PREF_NAME = "AuthPrefs";
+    private static final String PREF_NAME = "auth_prefs";
     private static final String KEY_ACCESS_TOKEN = "access_token";
     private static final String KEY_REFRESH_TOKEN = "refresh_token";
-    private static final String KEY_USER_ID = "user_id"; // Key để lưu User ID
+    private static final String KEY_USER_ID = "user_id"; // Thêm key mới để lưu User ID
 
     private static TokenManager instance;
-    private final SharedPreferences sharedPreferences;
-    private final SharedPreferences.Editor editor;
+    private SharedPreferences preferences;
 
-    // Constructor riêng tư để đảm bảo là Singleton
     private TokenManager(Context context) {
-        // Sử dụng Application Context để tránh memory leak
-        sharedPreferences = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
+        preferences = context.getApplicationContext()
+                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    // Phương thức để lấy instance Singleton
     public static synchronized TokenManager getInstance(Context context) {
-        if (instance == null) {
+        if (instance == null && context != null) {
             instance = new TokenManager(context);
         }
         return instance;
     }
 
-    // Lưu Access Token và Refresh Token
-    public void saveTokens(String accessToken, String refreshToken) {
-        Log.d(TAG, "Saving tokens...");
-        editor.putString(KEY_ACCESS_TOKEN, accessToken);
-        editor.putString(KEY_REFRESH_TOKEN, refreshToken);
-        editor.apply(); // apply() chạy bất đồng bộ, commit() chạy đồng bộ
+    public void saveToken(String accessToken) {
+        preferences.edit().putString(KEY_ACCESS_TOKEN, accessToken).apply();
     }
 
-    // Lưu User ID
+    public void saveRefreshToken(String refreshToken) {
+        preferences.edit().putString(KEY_REFRESH_TOKEN, refreshToken).apply();
+    }
+
+    // Thêm phương thức để lưu User ID
     public void saveUserId(String userId) {
-        Log.d(TAG, "Saving User ID: " + userId);
-        editor.putString(KEY_USER_ID, userId);
-        editor.apply();
+        preferences.edit().putString(KEY_USER_ID, userId).apply();
     }
 
-    // Lấy Access Token
     public String getAccessToken() {
-        String token = sharedPreferences.getString(KEY_ACCESS_TOKEN, null);
-        // Log.d(TAG, "Retrieved Access Token: " + (token != null ? "Exists" : "Null")); // Gỡ log này khi release
-        return token;
+        return preferences.getString(KEY_ACCESS_TOKEN, null);
     }
 
-    // Lấy Refresh Token
     public String getRefreshToken() {
-        String token = sharedPreferences.getString(KEY_REFRESH_TOKEN, null);
-        // Log.d(TAG, "Retrieved Refresh Token: " + (token != null ? "Exists" : "Null"));
-        return token;
+        return preferences.getString(KEY_REFRESH_TOKEN, null);
     }
 
-    // Lấy User ID
+    // Thêm phương thức để lấy User ID
     public String getUserId() {
-        String userId = sharedPreferences.getString(KEY_USER_ID, null);
-        Log.d(TAG, "Retrieved User ID: " + userId);
-        return userId;
+        return preferences.getString(KEY_USER_ID, null);
     }
 
-
-    // Xóa tất cả token và User ID (khi logout)
     public void clearTokens() {
-        Log.d(TAG, "Clearing all tokens and User ID.");
-        editor.remove(KEY_ACCESS_TOKEN);
-        editor.remove(KEY_REFRESH_TOKEN);
-        editor.remove(KEY_USER_ID);
-        editor.apply();
+        preferences.edit()
+                .remove(KEY_ACCESS_TOKEN)
+                .remove(KEY_REFRESH_TOKEN)
+                .remove(KEY_USER_ID) // Đồng thời xoá cả User ID khi đăng xuất
+                .apply();
+    }
+
+    public boolean hasAccessToken() {
+        return getAccessToken() != null;
+    }
+
+    public String getAuthorizationHeader() {
+        String token = getAccessToken();
+        return token != null ? "Bearer " + token : null;
     }
 }

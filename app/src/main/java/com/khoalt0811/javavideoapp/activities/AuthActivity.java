@@ -1,134 +1,163 @@
-package com.khoalt0811.javavideoapp.activities; // Thay package name nếu khác
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.text.TextUtils; // Import TextUtils
-import android.view.View;
-import android.widget.Toast;
+package com.khoalt0811.javavideoapp.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer; // Import Observer
 import androidx.lifecycle.ViewModelProvider;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
-// Import lớp Binding được tạo tự động
-import com.khoalt0811.javavideoapp.databinding.ActivityAuthBinding;
-import com.khoalt0811.javavideoapp.data.models.AuthResponse; // Import model
+import com.khoalt0811.javavideoapp.R;
 import com.khoalt0811.javavideoapp.viewmodels.AuthViewModel;
 
 public class AuthActivity extends AppCompatActivity {
 
-    private ActivityAuthBinding binding; // Sử dụng ViewBinding
+    private EditText editTextEmail;
+    private EditText editTextPassword;
+    private Button buttonSignUp;
+    private Button buttonSignIn;
+    private Button buttonSwitchMode;
+    private TextView textViewTitle;
+    private ProgressBar progressBar;
     private AuthViewModel authViewModel;
+    private boolean isLoginMode = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Inflate layout bằng ViewBinding
-        binding = ActivityAuthBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_auth);
 
-        // Lấy ViewModel
+        // Khởi tạo ViewModel
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
-        // --- Observe LiveData từ ViewModel ---
-        authViewModel.isLoading.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean isLoading) {
-                // Hiển thị/ẩn ProgressBar và bật/tắt nút
-                binding.progressBarAuth.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-                binding.buttonLogin.setEnabled(!isLoading);
-                binding.buttonSignup.setEnabled(!isLoading);
+        // Ánh xạ View
+        editTextEmail = findViewById(R.id.editTextEmail);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        buttonSignIn = findViewById(R.id.buttonSignIn);
+        buttonSignUp = findViewById(R.id.buttonSignUp);
+        buttonSwitchMode = findViewById(R.id.buttonSwitchMode);
+        textViewTitle = findViewById(R.id.textViewTitle);
+        progressBar = findViewById(R.id.progressBar);
+
+        // Thiết lập giao diện ban đầu
+        updateUI();
+
+        // Xử lý sự kiện chuyển đổi mode
+        buttonSwitchMode.setOnClickListener(v -> {
+            isLoginMode = !isLoginMode;
+            updateUI();
+        });
+
+        // Xử lý nút đăng nhập
+        buttonSignIn.setOnClickListener(v -> {
+            String email = editTextEmail.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
+
+            if (validateInput(email, password)) {
+                progressBar.setVisibility(View.VISIBLE);
+                authViewModel.signInUser(email, password); // Sửa từ loginUser thành signInUser
             }
         });
 
-        authViewModel.error.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(String error) {
-                // Hiển thị lỗi bằng Toast
-                if (error != null && !error.isEmpty()) {
-                    Toast.makeText(AuthActivity.this, error, Toast.LENGTH_LONG).show();
-                    // Có thể reset error trong ViewModel sau khi hiển thị
-                    // authViewModel.clearError(); // Cần thêm hàm này trong ViewModel
-                }
+        // Xử lý nút đăng ký
+        buttonSignUp.setOnClickListener(v -> {
+            String email = editTextEmail.getText().toString().trim();
+            String password = editTextPassword.getText().toString().trim();
+
+            if (validateInput(email, password)) {
+                progressBar.setVisibility(View.VISIBLE);
+                authViewModel.signUpUser(email, password); // Sửa từ signupUser thành signUpUser
             }
         });
 
-        authViewModel.authResult.observe(this, new Observer<AuthResponse>() {
-            @Override
-            public void onChanged(AuthResponse authResponse) {
-                // Xử lý khi đăng nhập/đăng ký thành công (có access token)
-                if (authResponse != null && authResponse.getAccessToken() != null) {
-                    Toast.makeText(AuthActivity.this, "Authentication Successful!", Toast.LENGTH_SHORT).show();
-                    // Chuyển sang MainActivity
-                    goToMainActivity();
-                }
-                // Không cần xử lý gì nếu authResponse là null (ví dụ khi logout)
+        // Quan sát kết quả đăng nhập
+        authViewModel.getSignInSuccess().observe(this, isSuccess -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (isSuccess) {
+                Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                navigateToMainActivity();
             }
         });
 
-        // --- Set OnClickListener cho các button ---
-        binding.buttonLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleLogin();
+        // Quan sát kết quả đăng ký
+        authViewModel.getSignUpSuccess().observe(this, isSuccess -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (isSuccess) {
+                Toast.makeText(this, "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.", Toast.LENGTH_LONG).show();
+                // Nếu muốn chuyển sang chế độ đăng nhập sau khi đăng ký
+                isLoginMode = true;
+                updateUI();
             }
         });
 
-        binding.buttonSignup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleSignup();
+        // Quan sát thông báo lỗi
+        authViewModel.getErrorMessage().observe(this, errorMsg -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (errorMsg != null && !errorMsg.isEmpty()) {
+                Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Hàm xử lý logic khi nhấn nút Login
-    private void handleLogin() {
-        String email = binding.editTextEmail.getText().toString().trim();
-        String password = binding.editTextPassword.getText().toString().trim();
-
-        // Kiểm tra đầu vào cơ bản
-        if (TextUtils.isEmpty(email) || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.editTextEmail.setError("Enter a valid email");
-            binding.editTextEmail.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(password) || password.length() < 6) { // Supabase yêu cầu ít nhất 6 ký tự
-            binding.editTextPassword.setError("Password must be at least 6 characters");
-            binding.editTextPassword.requestFocus();
-            return;
-        }
-
-        // Gọi hàm login trong ViewModel
-        authViewModel.loginUser(email, password);
+    // Kiểm tra người dùng đã đăng nhập khi mở ứng dụng
+    @Override
+    protected void onStart() {
+        super.onStart();
+        checkUserLoggedIn();
     }
 
-    // Hàm xử lý logic khi nhấn nút Signup
-    private void handleSignup() {
-        String email = binding.editTextEmail.getText().toString().trim();
-        String password = binding.editTextPassword.getText().toString().trim();
-
-        // Kiểm tra đầu vào cơ bản
-        if (TextUtils.isEmpty(email) || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.editTextEmail.setError("Enter a valid email");
-            binding.editTextEmail.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(password) || password.length() < 6) {
-            binding.editTextPassword.setError("Password must be at least 6 characters");
-            binding.editTextPassword.requestFocus();
-            return;
-        }
-
-        // Gọi hàm signup trong ViewModel
-        authViewModel.signupUser(email, password);
+    private void checkUserLoggedIn() {
+        progressBar.setVisibility(View.VISIBLE);
+        authViewModel.checkUserSession();
     }
 
-    // Hàm chuyển sang MainActivity
-    private void goToMainActivity() {
+    // Phương thức cập nhật giao diện dựa vào mode hiện tại
+    private void updateUI() {
+        if (isLoginMode) {
+            // Chế độ đăng nhập
+            textViewTitle.setText("Đăng nhập");
+            buttonSignIn.setVisibility(View.VISIBLE);
+            buttonSignUp.setVisibility(View.GONE);
+            buttonSwitchMode.setText("Chưa có tài khoản? Đăng ký ngay");
+        } else {
+            // Chế độ đăng ký
+            textViewTitle.setText("Đăng ký");
+            buttonSignIn.setVisibility(View.GONE);
+            buttonSignUp.setVisibility(View.VISIBLE);
+            buttonSwitchMode.setText("Đã có tài khoản? Đăng nhập ngay");
+        }
+    }
+
+    private boolean validateInput(String email, String password) {
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập email và mật khẩu", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        // Kiểm tra định dạng email
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        // Kiểm tra độ dài mật khẩu (tối thiểu 6 ký tự)
+        if (password.length() < 6) {
+            Toast.makeText(this, "Mật khẩu phải có ít nhất 6 ký tự", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void navigateToMainActivity() {
         Intent intent = new Intent(AuthActivity.this, MainActivity.class);
-        // Xóa tất cả activity trước đó khỏi stack để người dùng không quay lại màn hình login/signup
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish(); // Đóng AuthActivity
     }

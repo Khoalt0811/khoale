@@ -1,104 +1,86 @@
-package com.khoalt0811.javavideoapp.activities; // Thay package name nếu khác
+package com.khoalt0811.javavideoapp.activities;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.MenuItem; // Ensure this is imported
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull; // Ensure this is imported
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.google.android.material.navigation.NavigationBarView;
-
-import com.khoalt0811.javavideoapp.R; // Import R
-import com.khoalt0811.javavideoapp.databinding.ActivityMainBinding; // Import Binding
-import com.khoalt0811.javavideoapp.fragments.FeedFragment;
-import com.khoalt0811.javavideoapp.fragments.ProfileFragment;
-import com.khoalt0811.javavideoapp.fragments.UploadFragment;
+import com.khoalt0811.javavideoapp.R;
 import com.khoalt0811.javavideoapp.viewmodels.AuthViewModel;
-
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
-    private ActivityMainBinding binding;
     private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_main);
 
+        // Khởi tạo ViewModel
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
-        // Check login status before setting up UI
-        if (!authViewModel.isLoggedIn()) {
-            Log.d(TAG, "User not logged in, redirecting to AuthActivity.");
-            goToAuthActivity();
-            return; // Exit onCreate early if not logged in
-        }
+        // Kiểm tra người dùng đã đăng nhập chưa
+        checkUserLoggedIn();
 
-        Log.d(TAG, "User logged in, setting up Bottom Navigation.");
-        setupBottomNavigation();
-
-        // Load default fragment only if it's the initial creation
-        if (savedInstanceState == null) {
-            Log.d(TAG, "Loading default fragment (FeedFragment).");
-            binding.bottomNavigationView.setSelectedItemId(R.id.navigation_feed);
-        }
-
-        // Observe logout event
-        observeLogout();
+        // Thiết lập observers
+        setupObservers();
     }
 
-    private void setupBottomNavigation() {
-        binding.bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int itemId = item.getItemId();
+    private void checkUserLoggedIn() {
+        // Gọi phương thức checkUserSession thay vì isLoggedIn
+        authViewModel.checkUserSession();
+    }
 
-            if (itemId == R.id.navigation_feed) {
-                Log.d(TAG, "Feed navigation item selected.");
-                selectedFragment = new FeedFragment();
-            } else if (itemId == R.id.navigation_upload) {
-                Log.d(TAG, "Upload navigation item selected.");
-                selectedFragment = new UploadFragment();
-            } else if (itemId == R.id.navigation_profile) {
-                Log.d(TAG, "Profile navigation item selected.");
-                selectedFragment = new ProfileFragment();
+    private void setupObservers() {
+        // Quan sát trạng thái đăng nhập
+        authViewModel.getSignInSuccess().observe(this, isLoggedIn -> {
+            if (!isLoggedIn) {
+                // Nếu chưa đăng nhập, chuyển đến trang đăng nhập
+                navigateToAuthActivity();
             }
-
-            if (selectedFragment != null) {
-                Log.d(TAG, "Replacing fragment with: " + selectedFragment.getClass().getSimpleName());
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragmentContainer, selectedFragment)
-                        .commit();
-                return true; // Event handled
-            }
-            return false; // Event not handled
         });
-    }
 
-    private void observeLogout() {
-        // Observe authResult, if it becomes null, it means logout happened
-        authViewModel.authResult.observe(this, authResponse -> {
-            // Check if user is explicitly logged out (authResponse is null)
-            // AND ensure the activity is not finishing to prevent issues during configuration changes
-            if (authResponse == null && !authViewModel.isLoggedIn() && !isFinishing()) {
-                Log.d(TAG, "Logout detected via authResult becoming null, redirecting to AuthActivity.");
-                goToAuthActivity();
+        // Quan sát thông báo lỗi nếu có
+        authViewModel.getErrorMessage().observe(this, errorMsg -> {
+            if (errorMsg != null && !errorMsg.isEmpty()) {
+                Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // Tạo menu Options
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
 
-    private void goToAuthActivity() {
+    // Xử lý sự kiện menu
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_logout) {
+            signOut();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void signOut() {
+        authViewModel.signOut();
+        // Kết quả đăng xuất sẽ được xử lý trong observer getSignInSuccess
+    }
+
+    private void navigateToAuthActivity() {
         Intent intent = new Intent(MainActivity.this, AuthActivity.class);
-        // Clear back stack so user cannot go back to MainActivity after logout
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish(); // Finish MainActivity
+        finish(); // Đóng MainActivity
     }
 }

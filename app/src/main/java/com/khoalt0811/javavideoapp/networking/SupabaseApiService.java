@@ -4,6 +4,8 @@ package com.khoalt0811.javavideoapp.networking; // Thay package name nếu khác
 import com.khoalt0811.javavideoapp.data.models.AuthRequest;
 import com.khoalt0811.javavideoapp.data.models.AuthResponse;
 import com.khoalt0811.javavideoapp.data.models.Profile;
+import com.khoalt0811.javavideoapp.data.models.SignInRequest;
+import com.khoalt0811.javavideoapp.data.models.SignUpRequest;
 import com.khoalt0811.javavideoapp.data.models.VideoMetadata;
 
 import java.util.List;
@@ -23,6 +25,21 @@ import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 
 public interface SupabaseApiService {
+    // Đăng ký user mới
+    @POST("auth/v1/signup")
+    Call<AuthResponse> signUp(@Body SignUpRequest request);
+
+    // Đăng nhập
+    @POST("auth/v1/token?grant_type=password")
+    Call<AuthResponse> signIn(@Body SignInRequest request);
+
+    // Lấy thông tin user hiện tại
+    @GET("auth/v1/user")
+    Call<AuthResponse> getUser(@Header("Authorization") String authHeader);
+
+    // Đăng xuất
+    @POST("auth/v1/logout")
+    Call<Void> signOut(@Header("Authorization") String authHeader);
 
     // --- AUTH ---
     // Endpoint đăng nhập bằng email/password

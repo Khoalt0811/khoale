@@ -1,10 +1,7 @@
-package com.khoalt0811.javavideoapp.networking; // Thay package name nếu khác
-
-// Import TokenManager nếu bạn đã tạo
-// import com.khoalt0811.javavideoapp.utils.TokenManager;
-
+package com.khoalt0811.javavideoapp.networking;
+import android.content.Context;
+import com.khoalt0811.javavideoapp.utils.TokenManager;
 import java.io.IOException;
-
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -75,5 +72,27 @@ public class RetrofitClient {
             apiService = getClient().create(SupabaseApiService.class);
         }
         return apiService;
+    }
+    // Trong phương thức intercept của HeaderInterceptor:
+    public Response intercept(Interceptor.Chain chain) throws IOException {
+        Request original = chain.request();
+        Request.Builder requestBuilder = original.newBuilder()
+                .header("apikey", SUPABASE_ANON_KEY); // Luôn gửi anon key
+
+        // Nếu là request xác thực và có token, thêm header Authorization
+        Context context = null;
+        if (TokenManager.getInstance(context).hasAccessToken() &&
+                (original.url().toString().contains("auth/v1/user") ||
+                        original.url().toString().contains("auth/v1/logout") ||
+                        original.url().toString().contains("rest/v1/"))) {
+
+            String authHeader = TokenManager.getInstance(context).getAuthorizationHeader();
+            if (authHeader != null) {
+                requestBuilder.header("Authorization", authHeader);
+            }
+        }
+
+        Request request = requestBuilder.build();
+        return chain.proceed(request);
     }
 }
